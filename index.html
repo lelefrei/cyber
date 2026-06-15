@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOC Dashboard - Cyber Security</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Consolas, monospace;
+}
+
+body{
+    background:#050505;
+    color:#00ff88;
+    overflow-x:hidden;
+}
+
+#matrix{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    z-index:-1;
+}
+
+header{
+    text-align:center;
+    padding:30px;
+}
+
+header h1{
+    font-size:40px;
+    text-shadow:0 0 20px #00ff88;
+}
+
+.dashboard{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:20px;
+    padding:20px;
+}
+
+.card{
+    background:#111;
+    width:250px;
+    padding:25px;
+    border-radius:15px;
+    border:1px solid #00ff88;
+    box-shadow:0 0 20px rgba(0,255,136,0.4);
+    text-align:center;
+}
+
+.card h2{
+    font-size:18px;
+    margin-bottom:15px;
+}
+
+.numero{
+    font-size:35px;
+    font-weight:bold;
+}
+
+.graficos{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:30px;
+    margin-top:40px;
+}
+
+.grafico{
+    width:500px;
+    background:#111;
+    padding:20px;
+    border-radius:20px;
+}
+
+.terminal{
+    width:90%;
+    max-width:1000px;
+    margin:50px auto;
+    background:#000;
+    border:1px solid #00ff88;
+    border-radius:15px;
+    padding:20px;
+    box-shadow:0 0 20px rgba(0,255,136,0.5);
+}
+
+.terminal h2{
+    margin-bottom:20px;
+}
+
+.linha{
+    margin-bottom:10px;
+}
+
+.mapa{
+    width:90%;
+    max-width:1000px;
+    margin:40px auto;
+    background:#111;
+    border-radius:20px;
+    padding:30px;
+    text-align:center;
+}
+
+footer{
+    text-align:center;
+    padding:40px;
+}
+
+@media(max-width:768px){
+    .grafico{
+        width:95%;
+    }
+}
+</style>
+</head>
+<body>
+
+<canvas id="matrix"></canvas>
+
+<header>
+    <h1>⚡ SOC CYBER SECURITY DASHBOARD ⚡</h1>
+</header>
+
+<section class="dashboard">
+
+    <div class="card">
+        <h2>🔥 Ataques Detectados</h2>
+        <div class="numero" id="ataques">12540</div>
+    </div>
+
+    <div class="card">
+        <h2>🛡️ IPs Bloqueados</h2>
+        <div class="numero">890</div>
+    </div>
+
+    <div class="card">
+        <h2>⚠️ Vulnerabilidades</h2>
+        <div class="numero">18</div>
+    </div>
+
+    <div class="card">
+        <h2>🚨 Alertas Críticos</h2>
+        <div class="numero">7</div>
+    </div>
+
+</section>
+
+<section class="graficos">
+
+    <div class="grafico">
+        <canvas id="graficoAtaques"></canvas>
+    </div>
+
+    <div class="grafico">
+        <canvas id="graficoTipos"></canvas>
+    </div>
+
+</section>
+
+<section class="mapa">
+    <h2>🌍 Monitoramento Global de Ataques</h2>
+    <br>
+    <p>Brasil ➜ Estados Unidos</p>
+    <p>Rússia ➜ Brasil</p>
+    <p>China ➜ Alemanha</p>
+    <p>Índia ➜ Canadá</p>
+    <br>
+    <small>Simulação de tráfego cibernético em tempo real.</small>
+</section>
+
+<section class="terminal">
+
+    <h2>⌨️ Terminal SOC</h2>
+
+    <div class="linha">> scan network</div>
+    <div class="linha">[OK] 254 dispositivos encontrados.</div>
+
+    <div class="linha">> check vulnerabilities</div>
+    <div class="linha">[WARNING] 18 vulnerabilidades detectadas.</div>
+
+    <div class="linha">> show alerts</div>
+    <div class="linha">[CRITICAL] Tentativa de acesso não autorizado.</div>
+
+    <div class="linha">> monitor traffic</div>
+    <div class="linha">[ACTIVE] Monitoramento em execução...</div>
+
+</section>
+
+<footer>
+    Desenvolvido por Leticia Freitas © 2026
+</footer>
+
+<script>
+new Chart(document.getElementById('graficoAtaques'), {
+    type: 'line',
+    data: {
+        labels: ['Jan','Fev','Mar','Abr','Mai','Jun'],
+        datasets: [{
+            label:'Ataques',
+            data:[120,200,300,450,620,850],
+            borderColor:'#00ff88',
+            borderWidth:3,
+            fill:false
+        }]
+    }
+});
+
+new Chart(document.getElementById('graficoTipos'), {
+    type:'doughnut',
+    data:{
+        labels:['Phishing','Malware','Ransomware','DDoS'],
+        datasets:[{
+            data:[40,25,20,15],
+            backgroundColor:[
+                '#00ff88',
+                '#00cc66',
+                '#00994d',
+                '#006633'
+            ]
+        }]
+    }
+});
+
+const canvas = document.getElementById("matrix");
+const ctx = canvas.getContext("2d");
+
+canvas.height = window.innerHeight;
+canvas.width = window.innerWidth;
+
+const letras = "01ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const array = letras.split("");
+
+const tamanho = 16;
+const colunas = canvas.width / tamanho;
+const gotas = [];
+
+for(let x=0; x<colunas; x++){
+    gotas[x]=1;
+}
+
+function desenhar(){
+    ctx.fillStyle="rgba(0,0,0,0.05)";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    ctx.fillStyle="#00ff88";
+    ctx.font=tamanho+"px monospace";
+
+    for(let i=0;i<gotas.length;i++){
+        const texto =
+        array[Math.floor(Math.random()*array.length)];
+
+        ctx.fillText(
+            texto,
+            i*tamanho,
+            gotas[i]*tamanho
+        );
+
+        if(
+            gotas[i]*tamanho >
+            canvas.height &&
+            Math.random() > 0.975
+        ){
+            gotas[i]=0;
+        }
+
+        gotas[i]++;
+    }
+}
+
+setInterval(desenhar,33);
+</script>
+
+</body>
+</html>
