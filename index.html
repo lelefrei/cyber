@@ -3,283 +3,176 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SOC Dashboard - Cyber Security</title>
-
+<title>CyberSOC Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <style>
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:Consolas, monospace;
-}
-
-body{
-    background:#050505;
-    color:#00ff88;
-    overflow-x:hidden;
-}
-
-#matrix{
-    position:fixed;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
-    z-index:-1;
-}
-
-header{
-    text-align:center;
-    padding:30px;
-}
-
-header h1{
-    font-size:40px;
-    text-shadow:0 0 20px #00ff88;
-}
-
-.dashboard{
-    display:flex;
-    flex-wrap:wrap;
-    justify-content:center;
-    gap:20px;
-    padding:20px;
-}
-
-.card{
-    background:#111;
-    width:250px;
-    padding:25px;
-    border-radius:15px;
-    border:1px solid #00ff88;
-    box-shadow:0 0 20px rgba(0,255,136,0.4);
-    text-align:center;
-}
-
-.card h2{
-    font-size:18px;
-    margin-bottom:15px;
-}
-
-.numero{
-    font-size:35px;
-    font-weight:bold;
-}
-
-.graficos{
-    display:flex;
-    flex-wrap:wrap;
-    justify-content:center;
-    gap:30px;
-    margin-top:40px;
-}
-
-.grafico{
-    width:500px;
-    background:#111;
-    padding:20px;
-    border-radius:20px;
-}
-
-.terminal{
-    width:90%;
-    max-width:1000px;
-    margin:50px auto;
-    background:#000;
-    border:1px solid #00ff88;
-    border-radius:15px;
-    padding:20px;
-    box-shadow:0 0 20px rgba(0,255,136,0.5);
-}
-
-.terminal h2{
-    margin-bottom:20px;
-}
-
-.linha{
-    margin-bottom:10px;
-}
-
-.mapa{
-    width:90%;
-    max-width:1000px;
-    margin:40px auto;
-    background:#111;
-    border-radius:20px;
-    padding:30px;
-    text-align:center;
-}
-
-footer{
-    text-align:center;
-    padding:40px;
-}
-
-@media(max-width:768px){
-    .grafico{
-        width:95%;
-    }
-}
+body{margin:0;background:#08111f;color:#dbeafe;font-family:Segoe UI,Arial,sans-serif}
+.hidden{display:none}
+#loginPage{height:100vh;display:flex;justify-content:center;align-items:center;background:linear-gradient(135deg,#08111f,#102542)}
+.login-box,.panel,.card{background:#102542;border:1px solid #1e3a5f;border-radius:16px;box-shadow:0 0 20px rgba(0,0,0,.35)}
+.login-box{padding:35px;width:340px;text-align:center}
+input,button{width:100%;padding:12px;margin:8px 0;border-radius:10px;border:none}
+input{background:#0f172a;color:#fff}
+button{background:#2563eb;color:#fff;cursor:pointer}
+header{padding:20px;background:#0b1526;display:flex;justify-content:space-between;align-items:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px;padding:20px}
+.card,.panel{padding:20px}
+.flex{display:flex;gap:20px;flex-wrap:wrap;padding:20px}
+.panel{flex:1;min-width:350px}
+#terminalOutput,#alerts{height:200px;overflow:auto;background:#020617;padding:10px;border-radius:10px}
+.alert{padding:8px;border-bottom:1px solid #1e3a5f}
+.small{font-size:.9em;color:#93c5fd}
 </style>
 </head>
 <body>
+<div id="loginPage">
+<div class="login-box">
+<h1>CyberSOC</h1>
+<p class="small">Dashboard de demonstração</p>
+<input id="user" placeholder="Usuário">
+<input id="pass" type="password" placeholder="Senha">
+<button onclick="login()">Entrar</button>
+<p>Usuário: <b>admin</b><br>Senha: <b>admin123</b></p>
+</div>
+</div>
 
-<canvas id="matrix"></canvas>
-
+<div id="app" class="hidden">
 <header>
-    <h1>⚡ SOC CYBER SECURITY DASHBOARD ⚡</h1>
+<h2>CyberSOC - Security Operations Center</h2>
+<button onclick="downloadReport()" style="width:auto;padding:10px 20px">Baixar Relatório</button>
 </header>
 
-<section class="dashboard">
+<div class="grid">
+<div class="card"><h3>Ataques Detectados</h3><h1 id="attacks">1240</h1></div>
+<div class="card"><h3>IPs Bloqueados</h3><h1 id="ips">89</h1></div>
+<div class="card"><h3>Alertas Críticos</h3><h1 id="critical">7</h1></div>
+<div class="card"><h3>Vulnerabilidades</h3><h1 id="vulns">18</h1></div>
+</div>
 
-    <div class="card">
-        <h2>🔥 Ataques Detectados</h2>
-        <div class="numero" id="ataques">12540</div>
-    </div>
+<div class="flex">
+<div class="panel"><canvas id="chart1"></canvas></div>
+<div class="panel"><canvas id="chart2"></canvas></div>
+</div>
 
-    <div class="card">
-        <h2>🛡️ IPs Bloqueados</h2>
-        <div class="numero">890</div>
-    </div>
+<div class="flex">
+<div class="panel">
+<h3>Terminal SOC</h3>
+<div id="terminalOutput"></div>
+<input id="cmd" placeholder="help, scan, alerts, logs, clear">
+<button onclick="runCommand()">Executar</button>
+</div>
 
-    <div class="card">
-        <h2>⚠️ Vulnerabilidades</h2>
-        <div class="numero">18</div>
-    </div>
+<div class="panel">
+<h3>Feed de Alertas</h3>
+<div id="alerts"></div>
+</div>
+</div>
 
-    <div class="card">
-        <h2>🚨 Alertas Críticos</h2>
-        <div class="numero">7</div>
-    </div>
+<div class="flex">
+<div class="panel">
+<h3>Mapa de Ataques (Simulado)</h3>
+<p>🇧🇷 Brasil → 🇺🇸 Estados Unidos</p>
+<p>🇷🇺 Rússia → 🇩🇪 Alemanha</p>
+<p>🇨🇳 China → 🇧🇷 Brasil</p>
+<p>🇮🇳 Índia → 🇨🇦 Canadá</p>
+</div>
 
-</section>
+<div class="panel">
+<h3>Scanner de Portas (Educacional)</h3>
+<input id="ip" placeholder="192.168.0.10">
+<button onclick="scanPort()">Escanear</button>
+<div id="scanResult"></div>
+</div>
+</div>
 
-<section class="graficos">
-
-    <div class="grafico">
-        <canvas id="graficoAtaques"></canvas>
-    </div>
-
-    <div class="grafico">
-        <canvas id="graficoTipos"></canvas>
-    </div>
-
-</section>
-
-<section class="mapa">
-    <h2>🌍 Monitoramento Global de Ataques</h2>
-    <br>
-    <p>Brasil ➜ Estados Unidos</p>
-    <p>Rússia ➜ Brasil</p>
-    <p>China ➜ Alemanha</p>
-    <p>Índia ➜ Canadá</p>
-    <br>
-    <small>Simulação de tráfego cibernético em tempo real.</small>
-</section>
-
-<section class="terminal">
-
-    <h2>⌨️ Terminal SOC</h2>
-
-    <div class="linha">> scan network</div>
-    <div class="linha">[OK] 254 dispositivos encontrados.</div>
-
-    <div class="linha">> check vulnerabilities</div>
-    <div class="linha">[WARNING] 18 vulnerabilidades detectadas.</div>
-
-    <div class="linha">> show alerts</div>
-    <div class="linha">[CRITICAL] Tentativa de acesso não autorizado.</div>
-
-    <div class="linha">> monitor traffic</div>
-    <div class="linha">[ACTIVE] Monitoramento em execução...</div>
-
-</section>
-
-<footer>
-    Desenvolvido por Leticia Freitas © 2026
-</footer>
+<div class="flex">
+<div class="panel">
+<h3>Assistente de Segurança</h3>
+<input id="question" placeholder="O que é phishing?">
+<button onclick="askBot()">Perguntar</button>
+<div id="bot"></div>
+</div>
+</div>
+</div>
 
 <script>
-new Chart(document.getElementById('graficoAtaques'), {
-    type: 'line',
-    data: {
-        labels: ['Jan','Fev','Mar','Abr','Mai','Jun'],
-        datasets: [{
-            label:'Ataques',
-            data:[120,200,300,450,620,850],
-            borderColor:'#00ff88',
-            borderWidth:3,
-            fill:false
-        }]
-    }
-});
-
-new Chart(document.getElementById('graficoTipos'), {
-    type:'doughnut',
-    data:{
-        labels:['Phishing','Malware','Ransomware','DDoS'],
-        datasets:[{
-            data:[40,25,20,15],
-            backgroundColor:[
-                '#00ff88',
-                '#00cc66',
-                '#00994d',
-                '#006633'
-            ]
-        }]
-    }
-});
-
-const canvas = document.getElementById("matrix");
-const ctx = canvas.getContext("2d");
-
-canvas.height = window.innerHeight;
-canvas.width = window.innerWidth;
-
-const letras = "01ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-const array = letras.split("");
-
-const tamanho = 16;
-const colunas = canvas.width / tamanho;
-const gotas = [];
-
-for(let x=0; x<colunas; x++){
-    gotas[x]=1;
+function login(){
+ if(user.value==='admin' && pass.value==='admin123'){
+  loginPage.classList.add('hidden');
+  app.classList.remove('hidden');
+ } else {
+  alert('Credenciais inválidas');
+ }
 }
 
-function desenhar(){
-    ctx.fillStyle="rgba(0,0,0,0.05)";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
+new Chart(document.getElementById('chart1'),{
+ type:'line',
+ data:{labels:['Jan','Fev','Mar','Abr','Mai','Jun'],
+ datasets:[{label:'Ataques',data:[120,200,300,420,580,700],borderColor:'#60a5fa'}]}
+});
 
-    ctx.fillStyle="#00ff88";
-    ctx.font=tamanho+"px monospace";
+new Chart(document.getElementById('chart2'),{
+ type:'doughnut',
+ data:{labels:['Phishing','Malware','Ransomware','DDoS'],
+ datasets:[{data:[45,25,20,10]}]}
+});
 
-    for(let i=0;i<gotas.length;i++){
-        const texto =
-        array[Math.floor(Math.random()*array.length)];
-
-        ctx.fillText(
-            texto,
-            i*tamanho,
-            gotas[i]*tamanho
-        );
-
-        if(
-            gotas[i]*tamanho >
-            canvas.height &&
-            Math.random() > 0.975
-        ){
-            gotas[i]=0;
-        }
-
-        gotas[i]++;
-    }
+function addAlert(msg){
+ const div=document.createElement('div');
+ div.className='alert';
+ div.textContent=new Date().toLocaleTimeString()+' - '+msg;
+ alerts.prepend(div);
 }
 
-setInterval(desenhar,33);
+setInterval(()=>{
+ attacks.textContent = Number(attacks.textContent)+Math.floor(Math.random()*10);
+ const msgs=['Tentativa de brute force','IP bloqueado','Malware detectado','Login suspeito'];
+ addAlert(msgs[Math.floor(Math.random()*msgs.length)]);
+},5000);
+
+function write(t){
+ terminalOutput.innerHTML += '&gt; '+t+'<br>';
+ terminalOutput.scrollTop = terminalOutput.scrollHeight;
+}
+
+function runCommand(){
+ const c=cmd.value.toLowerCase();
+ if(c==='help') write('help, scan, alerts, logs, clear');
+ else if(c==='scan') write('254 dispositivos encontrados.');
+ else if(c==='alerts') write('7 alertas críticos.');
+ else if(c==='logs') write('Exibindo logs...');
+ else if(c==='clear') terminalOutput.innerHTML='';
+ else write('Comando não encontrado.');
+ cmd.value='';
+}
+
+function scanPort(){
+ scanResult.innerHTML='<p>22 - SSH - OPEN</p><p>80 - HTTP - OPEN</p><p>443 - HTTPS - OPEN</p><p>3306 - MySQL - CLOSED</p>';
+}
+
+function askBot(){
+ const q=question.value.toLowerCase();
+ if(q.includes('phishing'))
+  bot.innerHTML='Phishing é um golpe usado para roubar informações por mensagens ou sites falsos.';
+ else if(q.includes('ransomware'))
+  bot.innerHTML='Ransomware é um malware que sequestra dados e exige pagamento.';
+ else
+  bot.innerHTML='Pergunta registrada. Consulte a documentação de segurança.';
+}
+
+function downloadReport(){
+ const text = `CyberSOC Relatório
+
+Ataques: ${attacks.textContent}
+IPs Bloqueados: ${ips.textContent}
+Alertas Críticos: ${critical.textContent}
+Vulnerabilidades: ${vulns.textContent}`;
+ const blob = new Blob([text],{type:'text/plain'});
+ const a=document.createElement('a');
+ a.href=URL.createObjectURL(blob);
+ a.download='CyberSOC-Relatorio.txt';
+ a.click();
+}
 </script>
-
 </body>
 </html>
