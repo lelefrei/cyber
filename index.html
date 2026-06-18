@@ -2,176 +2,215 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CyberSOC Dashboard</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CyberSOC Ultimate</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-body{margin:0;background:#08111f;color:#dbeafe;font-family:Segoe UI,Arial,sans-serif}
+body{margin:0;font-family:Segoe UI,Arial;background:#07111f;color:#e5eefc}
+header{background:#0c1b33;padding:15px}
+.container{padding:20px}
+.card{background:#102542;border-radius:14px;padding:18px;margin:10px;box-shadow:0 0 10px rgba(0,0,0,.4)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px}
 .hidden{display:none}
-#loginPage{height:100vh;display:flex;justify-content:center;align-items:center;background:linear-gradient(135deg,#08111f,#102542)}
-.login-box,.panel,.card{background:#102542;border:1px solid #1e3a5f;border-radius:16px;box-shadow:0 0 20px rgba(0,0,0,.35)}
-.login-box{padding:35px;width:340px;text-align:center}
-input,button{width:100%;padding:12px;margin:8px 0;border-radius:10px;border:none}
-input{background:#0f172a;color:#fff}
-button{background:#2563eb;color:#fff;cursor:pointer}
-header{padding:20px;background:#0b1526;display:flex;justify-content:space-between;align-items:center}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px;padding:20px}
-.card,.panel{padding:20px}
-.flex{display:flex;gap:20px;flex-wrap:wrap;padding:20px}
+input,button,select,textarea{padding:10px;border-radius:8px;border:none;margin:5px}
+input,select,textarea{background:#0f172a;color:#fff}
+button{background:#2563eb;color:white;cursor:pointer}
+.flex{display:flex;gap:20px;flex-wrap:wrap}
 .panel{flex:1;min-width:350px}
-#terminalOutput,#alerts{height:200px;overflow:auto;background:#020617;padding:10px;border-radius:10px}
-.alert{padding:8px;border-bottom:1px solid #1e3a5f}
-.small{font-size:.9em;color:#93c5fd}
+#alerts,#logs,#terminalOut{height:220px;overflow:auto;background:#020617;padding:10px;border-radius:8px}
+.badge{padding:4px 8px;border-radius:6px;background:#1d4ed8}
 </style>
 </head>
 <body>
-<div id="loginPage">
-<div class="login-box">
-<h1>CyberSOC</h1>
-<p class="small">Dashboard de demonstração</p>
-<input id="user" placeholder="Usuário">
-<input id="pass" type="password" placeholder="Senha">
+
+<div id="loginScreen" class="container">
+<div class="card" style="max-width:400px;margin:auto;text-align:center">
+<h1>CyberSOC Ultimate</h1>
+<p>Login Multiusuário (simulado via LocalStorage)</p>
+<input id="email" placeholder="Email"><br>
+<input id="password" type="password" placeholder="Senha"><br>
 <button onclick="login()">Entrar</button>
-<p>Usuário: <b>admin</b><br>Senha: <b>admin123</b></p>
+<button onclick="register()">Criar Usuário</button>
 </div>
 </div>
 
 <div id="app" class="hidden">
 <header>
-<h2>CyberSOC - Security Operations Center</h2>
-<button onclick="downloadReport()" style="width:auto;padding:10px 20px">Baixar Relatório</button>
+<h2>CyberSOC Ultimate <span class="badge" id="role"></span></h2>
+<button onclick="logout()">Sair</button>
 </header>
 
+<div class="container">
+
 <div class="grid">
-<div class="card"><h3>Ataques Detectados</h3><h1 id="attacks">1240</h1></div>
+<div class="card"><h3>Ataques</h3><h1 id="attacks">1240</h1></div>
 <div class="card"><h3>IPs Bloqueados</h3><h1 id="ips">89</h1></div>
-<div class="card"><h3>Alertas Críticos</h3><h1 id="critical">7</h1></div>
-<div class="card"><h3>Vulnerabilidades</h3><h1 id="vulns">18</h1></div>
+<div class="card"><h3>Incidentes</h3><h1 id="incidentsCount">3</h1></div>
+<div class="card"><h3>Usuários Online</h3><h1 id="online">1</h1></div>
 </div>
 
 <div class="flex">
-<div class="panel"><canvas id="chart1"></canvas></div>
-<div class="panel"><canvas id="chart2"></canvas></div>
+<div class="card panel"><canvas id="lineChart"></canvas></div>
+<div class="card panel"><canvas id="pieChart"></canvas></div>
 </div>
 
 <div class="flex">
-<div class="panel">
-<h3>Terminal SOC</h3>
-<div id="terminalOutput"></div>
-<input id="cmd" placeholder="help, scan, alerts, logs, clear">
-<button onclick="runCommand()">Executar</button>
-</div>
-
-<div class="panel">
+<div class="card panel">
 <h3>Feed de Alertas</h3>
 <div id="alerts"></div>
 </div>
+
+<div class="card panel">
+<h3>Terminal SOC</h3>
+<div id="terminalOut"></div>
+<input id="cmd" placeholder="help, scan, alerts, users, incidents">
+<button onclick="terminal()">Executar</button>
+</div>
 </div>
 
 <div class="flex">
-<div class="panel">
-<h3>Mapa de Ataques (Simulado)</h3>
-<p>🇧🇷 Brasil → 🇺🇸 Estados Unidos</p>
-<p>🇷🇺 Rússia → 🇩🇪 Alemanha</p>
-<p>🇨🇳 China → 🇧🇷 Brasil</p>
-<p>🇮🇳 Índia → 🇨🇦 Canadá</p>
+<div class="card panel">
+<h3>Incidentes</h3>
+<input id="title" placeholder="Título">
+<select id="severity">
+<option>Baixa</option>
+<option>Média</option>
+<option>Alta</option>
+<option>Crítica</option>
+</select>
+<button onclick="newIncident()">Criar</button>
+<div id="incidents"></div>
 </div>
 
-<div class="panel">
-<h3>Scanner de Portas (Educacional)</h3>
+<div class="card panel">
+<h3>Logs</h3>
+<div id="logs"></div>
+</div>
+</div>
+
+<div class="flex">
+<div class="card panel">
+<h3>Scanner de Portas</h3>
 <input id="ip" placeholder="192.168.0.10">
-<button onclick="scanPort()">Escanear</button>
+<button onclick="scan()">Escanear</button>
 <div id="scanResult"></div>
 </div>
-</div>
 
-<div class="flex">
-<div class="panel">
-<h3>Assistente de Segurança</h3>
+<div class="card panel">
+<h3>Assistente</h3>
 <input id="question" placeholder="O que é phishing?">
-<button onclick="askBot()">Perguntar</button>
+<button onclick="ask()">Perguntar</button>
 <div id="bot"></div>
 </div>
+</div>
+
+<div class="card">
+<h3>Mapa de Ataques (simulado)</h3>
+<p>🇧🇷 Brasil → 🇺🇸 EUA</p>
+<p>🇨🇳 China → 🇧🇷 Brasil</p>
+<p>🇷🇺 Rússia → 🇩🇪 Alemanha</p>
+</div>
+
 </div>
 </div>
 
 <script>
-function login(){
- if(user.value==='admin' && pass.value==='admin123'){
-  loginPage.classList.add('hidden');
-  app.classList.remove('hidden');
- } else {
-  alert('Credenciais inválidas');
- }
+if(!localStorage.getItem('users')){
+ localStorage.setItem('users',JSON.stringify([
+  {email:'admin@cybersoc.com',password:'admin123',role:'Administrador'}
+ ]));
 }
 
-new Chart(document.getElementById('chart1'),{
+function register(){
+ const email=prompt('Email');
+ const password=prompt('Senha');
+ const role=prompt('Cargo (Administrador, Analista, Visualizador)','Analista');
+ if(!email||!password) return;
+ const users=JSON.parse(localStorage.getItem('users'));
+ users.push({email,password,role});
+ localStorage.setItem('users',JSON.stringify(users));
+ alert('Usuário criado.');
+}
+
+function login(){
+ const users=JSON.parse(localStorage.getItem('users'));
+ const u=users.find(x=>x.email===email.value&&x.password===password.value);
+ if(!u){alert('Credenciais inválidas');return;}
+ sessionStorage.setItem('user',JSON.stringify(u));
+ loginScreen.classList.add('hidden');
+ app.classList.remove('hidden');
+ role.textContent=u.role;
+ addLog('Login: '+u.email);
+}
+
+function logout(){
+ sessionStorage.clear();
+ location.reload();
+}
+
+new Chart(document.getElementById('lineChart'),{
  type:'line',
  data:{labels:['Jan','Fev','Mar','Abr','Mai','Jun'],
- datasets:[{label:'Ataques',data:[120,200,300,420,580,700],borderColor:'#60a5fa'}]}
+ datasets:[{label:'Ataques',data:[120,200,310,430,580,700],borderColor:'#60a5fa'}]}
 });
 
-new Chart(document.getElementById('chart2'),{
+new Chart(document.getElementById('pieChart'),{
  type:'doughnut',
  data:{labels:['Phishing','Malware','Ransomware','DDoS'],
- datasets:[{data:[45,25,20,10]}]}
+ datasets:[{data:[40,25,20,15]}]}
 });
 
 function addAlert(msg){
- const div=document.createElement('div');
- div.className='alert';
- div.textContent=new Date().toLocaleTimeString()+' - '+msg;
- alerts.prepend(div);
+ const d=document.createElement('div');
+ d.innerHTML=new Date().toLocaleTimeString()+' - '+msg;
+ alerts.prepend(d);
+ addLog(msg);
+}
+
+function addLog(msg){
+ const d=document.createElement('div');
+ d.innerHTML=new Date().toLocaleString()+' - '+msg;
+ logs.prepend(d);
 }
 
 setInterval(()=>{
- attacks.textContent = Number(attacks.textContent)+Math.floor(Math.random()*10);
- const msgs=['Tentativa de brute force','IP bloqueado','Malware detectado','Login suspeito'];
- addAlert(msgs[Math.floor(Math.random()*msgs.length)]);
+ attacks.textContent=Number(attacks.textContent)+Math.floor(Math.random()*8);
+ const arr=['Malware detectado','Brute force','Login suspeito','IP bloqueado'];
+ addAlert(arr[Math.floor(Math.random()*arr.length)]);
 },5000);
 
-function write(t){
- terminalOutput.innerHTML += '&gt; '+t+'<br>';
- terminalOutput.scrollTop = terminalOutput.scrollHeight;
-}
-
-function runCommand(){
+function terminal(){
  const c=cmd.value.toLowerCase();
- if(c==='help') write('help, scan, alerts, logs, clear');
- else if(c==='scan') write('254 dispositivos encontrados.');
- else if(c==='alerts') write('7 alertas críticos.');
- else if(c==='logs') write('Exibindo logs...');
- else if(c==='clear') terminalOutput.innerHTML='';
- else write('Comando não encontrado.');
+ if(c==='help') out('help, scan, alerts, users, incidents');
+ else if(c==='scan') out('254 dispositivos encontrados');
+ else if(c==='alerts') out('Alertas críticos: 7');
+ else if(c==='users') out('Usuários cadastrados: '+JSON.parse(localStorage.getItem('users')).length);
+ else if(c==='incidents') out('Incidentes: '+incidentsCount.textContent);
+ else out('Comando desconhecido');
  cmd.value='';
 }
+function out(t){terminalOut.innerHTML+='&gt; '+t+'<br>';}
 
-function scanPort(){
- scanResult.innerHTML='<p>22 - SSH - OPEN</p><p>80 - HTTP - OPEN</p><p>443 - HTTPS - OPEN</p><p>3306 - MySQL - CLOSED</p>';
+let count=3;
+function newIncident(){
+ const div=document.createElement('div');
+ div.className='card';
+ div.innerHTML='<b>'+title.value+'</b> - '+severity.value;
+ incidents.prepend(div);
+ count++;
+ incidentsCount.textContent=count;
+ addLog('Novo incidente criado');
 }
 
-function askBot(){
+function scan(){
+ scanResult.innerHTML='<p>22 SSH - OPEN</p><p>80 HTTP - OPEN</p><p>443 HTTPS - OPEN</p>';
+}
+
+function ask(){
  const q=question.value.toLowerCase();
- if(q.includes('phishing'))
-  bot.innerHTML='Phishing é um golpe usado para roubar informações por mensagens ou sites falsos.';
- else if(q.includes('ransomware'))
-  bot.innerHTML='Ransomware é um malware que sequestra dados e exige pagamento.';
- else
-  bot.innerHTML='Pergunta registrada. Consulte a documentação de segurança.';
-}
-
-function downloadReport(){
- const text = `CyberSOC Relatório
-
-Ataques: ${attacks.textContent}
-IPs Bloqueados: ${ips.textContent}
-Alertas Críticos: ${critical.textContent}
-Vulnerabilidades: ${vulns.textContent}`;
- const blob = new Blob([text],{type:'text/plain'});
- const a=document.createElement('a');
- a.href=URL.createObjectURL(blob);
- a.download='CyberSOC-Relatorio.txt';
- a.click();
+ if(q.includes('phishing')) bot.innerHTML='Phishing é um golpe que tenta roubar credenciais.';
+ else if(q.includes('ransomware')) bot.innerHTML='Ransomware sequestra dados e exige resgate.';
+ else bot.innerHTML='Pergunta registrada.';
 }
 </script>
 </body>
